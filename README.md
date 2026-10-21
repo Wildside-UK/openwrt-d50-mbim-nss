@@ -19,7 +19,7 @@ Tested on a D50 on 21 Oct 2026, LTE with three carriers aggregated, iPad on 5 GH
 
 ## The bug the patch fixes
 
-Without `0148`, the router itself works, but LAN clients behind the modem don't. Every TCP download stops after about 41 KB and HTTPS never completes. Pings and short requests go through, so it looks like it's working.
+Without `0148`, the router itself works but LAN clients behind the modem don't. Every TCP download stops after about 41 KB and HTTPS never completes. Pings and short requests go through, so it looks like it's working.
 
 1. **Accelerated egress carries a link-layer frame.** For an accelerated flow from the LAN to the modem, the firmware hands the packet back to the transmit callback with the 14-byte frame the rmnet_rx node pair uses (zero MACs, IP ethertype) still on the front. `nss_rmnet_rx_bind_xmit()` queued it on the raw-IP `wwan0` as it was, so the modem dropped it. On a download those packets are the client's ACKs, so the server stops after one window, as soon as ECM accelerates the flow. A capture on `wwan0` shows it straight away: the accelerated packets start `0000 0000 0000 0000 0000 0000 0800 45..`.
 2. **A failed hand-off drops the packet.** If the receive handler can't pass a packet to the firmware, it handed it to the stack still marked as an 802.3 frame, which no protocol handler takes. With `dev.nss.general.redirect=0` that is every received packet: `rx_dropped` on `wwan0` climbs with each one and the router goes offline. Note that `/etc/init.d/qca-nss-ecm stop` sets `redirect=0`, so on a raw-IP modem "does it work with ECM stopped?" makes things worse, not better. To take acceleration out of the picture while testing, use `echo 1 > /sys/kernel/debug/ecm/front_end_ipv4_stop` instead.
