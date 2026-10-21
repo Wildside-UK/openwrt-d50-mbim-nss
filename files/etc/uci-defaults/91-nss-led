@@ -1,0 +1,8 @@
+#!/bin/sh
+# The NSS tree's D50 device tree names the internet LED green:wan-online, not
+# green:internet as the vendor-derived tree did. Point the existing LED at it.
+[ -d /sys/class/leds/green:wan-online ] || exit 0
+uci -q get system.led_internet >/dev/null || exit 0
+uci set system.led_internet.sysfs='green:wan-online'
+uci commit system
+exit 0

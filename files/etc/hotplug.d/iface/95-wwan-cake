@@ -1,0 +1,16 @@
+#!/bin/sh
+# Optional: upload shaping on the modem.
+#
+# Under a saturating upload the modem and the cell buffer the uplink, and
+# latency climbs to around a second. cake on wwan0 set a little below the
+# measured uplink rate keeps it under 100 ms. Accelerated uploads pass this
+# queue as well: with the 0148 patch the rmnet_rx egress path queues them on
+# wwan0. Download is left unshaped, since an ingress shaper would send every
+# download back through the CPU.
+#
+# Set RATE to roughly 80-85% of your own measured upload speed.
+RATE=11mbit
+
+[ "$ACTION" = ifup ] || exit 0
+[ "$DEVICE" = wwan0 ] || exit 0
+tc qdisc replace dev wwan0 root cake bandwidth "$RATE" besteffort ack-filter
