@@ -1,0 +1,13 @@
+diff --git a/package/base-files/Makefile b/package/base-files/Makefile
+index 910a3daa3f..a3253ae27e 100644
+--- a/package/base-files/Makefile
++++ b/package/base-files/Makefile
+@@ -260,6 +260,8 @@ ifneq ($(CONFIG_USE_APK),)
+ 	mkdir -p $(1)/etc/apk/repositories.d
+ 	$(call FeedSourcesAppendAPK,$(1)/etc/apk/repositories.d/distfeeds.list)
+ 	$(VERSION_SED_SCRIPT) $(1)/etc/apk/repositories.d/distfeeds.list
++	$(if $(wildcard $(TOPDIR)/files/etc/apk/repositories.d/distfeeds.list), \
++		$(CP) $(TOPDIR)/files/etc/apk/repositories.d/distfeeds.list $(1)/etc/apk/repositories.d/distfeeds.list)
+ 
+ 	rm -f $(1)/etc/uci-defaults/13_fix-group-user
+ 	rm -f $(1)/sbin/pkg_check
