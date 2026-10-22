@@ -14,6 +14,8 @@ When the receive handler cannot hand a packet to the firmware (redirect
 off, a full queue) it passed the packet up still marked as an 802.3
 frame, which no protocol handler takes, so every received packet was
 dropped. Restore the protocol the packet arrived with.
+
+Signed-off-by: Steve Meek <stevemeek82@gmail.com>
 ---
 --- a/nss_rmnet_rx.c
 +++ b/nss_rmnet_rx.c

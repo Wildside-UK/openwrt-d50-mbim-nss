@@ -2,7 +2,7 @@
 
 Full NSS offload on the Xunison (Zearts) Exigo D50 5G, with the Quectel RM500Q-AE on the upstream PCIe/MBIM stack (`mhi_wwan_mbim` + `umbim`, netdev `wwan0`) instead of the vendor `pcie_mhi` + `rmnet_nss` drivers.
 
-It builds on kuncy7's IPQ5018 NSS work ([kuncy7/openwrt-nss-edma](https://github.com/kuncy7/openwrt-nss-edma), release `ipq50xx-2026.10.19`), which already carries the D50, the RM500Q-AE PCI ID and Julius Bairaktaris's generic raw-IP binding for `qca-nss-drv`. What this repo adds is one driver fix that makes that binding work for LAN traffic, plus a few small config files.
+It builds on kuncy7's IPQ5018 NSS work ([kuncy7/openwrt-nss-edma](https://github.com/kuncy7/openwrt-nss-edma), release `ipq50xx-2026.10.19`), which already carries the D50, the RM500Q-AE PCI ID and Julius Bairaktaris's generic raw-IP binding for `qca-nss-drv`. What this repo adds is one driver fix that makes that binding work for LAN traffic, plus two small config files.
 
 ## What works
 
@@ -12,7 +12,6 @@ Tested on a D50 on 21 Oct 2026, LTE with three carriers aggregated, iPad on 5 GH
 |---|---|---|
 | Download | ~140 Mbit/s with CPU0 at ~61% | 116-160 Mbit/s with CPU0 at ~28%, NSS core ~7% |
 | Peak seen on `wwan0` | | 203 Mbit/s |
-| Upload latency under load | ~970 ms | 45-60 ms (with the optional cake script) |
 
 - `nss-status`: OFFLOAD ACTIVE, Wi-Fi offload (wifili) on both radios, ECM accelerating modem flows (180+ at once during a speed test), kernel log clean.
 - `wwan0: raw-IP interface bound to rmnet_rx node ...` at boot and again on every session re-connect.
@@ -26,6 +25,8 @@ Without `0148`, the router itself works but LAN clients behind the modem don't. 
 
 The patch strips the frame (and sets the protocol) in the transmit callback, and restores the original protocol when the hand-off fails.
 
+Submitted upstream as [kuncy7/nss-packages#5](https://github.com/kuncy7/nss-packages/pull/5). Once it's merged, kuncy7's own builds carry the fix and you won't need to add the patch yourself.
+
 ## Using it
 
 1. Build kuncy7's tree for the D50, with `patches/qca-nss-drv/0148-nss_rmnet_rx-unframe-accelerated-raw-ip-egress.patch` copied into `feeds/nss/qca-nss-drv/patches/`. See [BUILD.md](BUILD.md) for the other changes the tree needed on 21 Oct.
@@ -33,7 +34,6 @@ The patch strips the frame (and sets the protocol) in the transmit callback, and
 3. Add the files under `files/` to the image (Image Builder `FILES=`), or copy them on and run them once:
    - `etc/uci-defaults/90-nss-no-flowtable`: software flow offloading off, or ECM never sees the flows.
    - `etc/uci-defaults/91-nss-led`: in this tree's device tree the internet LED is `green:wan-online`. A config carried over from a non-NSS build that drives `green:internet` leaves the LED dark.
-   - `etc/hotplug.d/iface/95-wwan-cake` (optional): cake on `wwan0` upload. Set `RATE` to about 80-85% of your measured upload speed. Needs `tc-full` and `kmod-sched-cake`.
 
 ## Things to know
 
