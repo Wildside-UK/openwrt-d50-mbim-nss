@@ -7,7 +7,16 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-24.04
+    # Same image either way; the arm64 job's Image Builder runs on an aarch64 host.
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - arch: x86_64
+            runner: ubuntu-24.04
+          - arch: aarch64
+            runner: ubuntu-24.04-arm
+    runs-on: ${{ matrix.runner }}
     timeout-minutes: 355
     steps:
       - name: Free disk space
@@ -19,8 +28,9 @@ jobs:
       - name: Install build dependencies
         run: |
           sudo apt-get update -qq
-          sudo apt-get install -y -qq build-essential clang flex bison g++ gawk \
-            gcc-multilib g++-multilib gettext git libncurses-dev libssl-dev \
+          multilib=; [ "${{ matrix.arch }}" = x86_64 ] && multilib="gcc-multilib g++-multilib"
+          sudo apt-get install -y -qq build-essential clang flex bison g++ gawk $multilib \
+            gettext git libncurses-dev libssl-dev \
             python3-dev python3-setuptools rsync swig unzip zlib1g-dev file wget ccache zstd
 
       - uses: actions/checkout@v4
@@ -46,7 +56,7 @@ jobs:
       - uses: actions/upload-artifact@v4
         with:
           if-no-files-found: error
-          name: d50-nss-${{ github.sha }}
+          name: d50-nss-${{ matrix.arch }}-${{ github.sha }}
           path: out/
           retention-days: 30
 
@@ -54,6 +64,6 @@ jobs:
         if: failure()
         uses: actions/upload-artifact@v4
         with:
-          name: d50-nss-logs-${{ github.sha }}
+          name: d50-nss-logs-${{ matrix.arch }}-${{ github.sha }}
           path: openwrt/logs/
           retention-days: 14

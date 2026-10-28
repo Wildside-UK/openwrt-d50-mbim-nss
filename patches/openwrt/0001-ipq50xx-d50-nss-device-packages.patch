@@ -1,5 +1,5 @@
 diff --git a/target/linux/qualcommax/image/ipq50xx.mk b/target/linux/qualcommax/image/ipq50xx.mk
-index e3ad8ab6ff..3538a553e9 100644
+index 067d2a5889..e58abeccda 100644
 --- a/target/linux/qualcommax/image/ipq50xx.mk
 +++ b/target/linux/qualcommax/image/ipq50xx.mk
 @@ -120,7 +120,7 @@ define Device/cmcc_rax3000q
@@ -11,7 +11,7 @@ index e3ad8ab6ff..3538a553e9 100644
  
  define Device/cudy_p5
  	$(call Device/FitImageLzma)
-@@ -254,7 +254,7 @@ define Device/glinet_gl-x2000
+@@ -277,7 +277,7 @@ define Device/glinet_gl-x2000
  		kmod-usb-serial-option \
  		dumpimage
  endef
@@ -20,7 +20,7 @@ index e3ad8ab6ff..3538a553e9 100644
  
  define Device/iodata_wn-dax3000gr
  	$(call Device/FitImageLzma)
-@@ -297,7 +297,7 @@ define Device/linksys_mr2000
+@@ -320,7 +320,7 @@ define Device/linksys_mr2000
  		kmod-usb-storage \
  		kmod-usb-ledtrig-usbport
  endef
@@ -29,7 +29,7 @@ index e3ad8ab6ff..3538a553e9 100644
  
  define Device/linksys_mr5500
  	$(call Device/linksys_ipq50xx_mx_base)
-@@ -499,7 +499,7 @@ define Device/tplink_re700x
+@@ -570,7 +570,7 @@ define Device/tplink_re700x
  	DEVICE_PACKAGES := ath11k-firmware-ipq5018-qcn6122 \
  		ipq-wifi-tplink_re700x kmod-phy-realtek
  endef
@@ -38,7 +38,7 @@ index e3ad8ab6ff..3538a553e9 100644
  
  define Device/tplink_ex511-v2
  	$(call Device/FitImageLzma)
-@@ -536,7 +536,7 @@ define Device/wallys_dr5018s
+@@ -632,7 +632,7 @@ define Device/wallys_dr5018s
  	DEVICE_PACKAGES := ath11k-firmware-ipq5018-qcn6122 \
  		ipq-wifi-wallys_dr5018s
  endef
@@ -47,7 +47,7 @@ index e3ad8ab6ff..3538a553e9 100644
  
  define Device/xiaomi_ipq50xx_ax_base
  	$(call Device/FitImage)
-@@ -612,7 +612,11 @@ define Device/xunison_exigo-hub-d50-5g
+@@ -708,7 +708,12 @@ define Device/xunison_exigo-hub-d50-5g
  		kmod-mhi-pci-generic \
  		kmod-mhi-wwan-ctrl \
  		kmod-mhi-wwan-mbim \
@@ -56,7 +56,8 @@ index e3ad8ab6ff..3538a553e9 100644
 +		kmod-qca-nss-ecm kmod-qca-nss-drv-igs kmod-qca-nss-drv-netlink \
 +		kmod-qca-nss-drv-pppoe kmod-qca-nss-drv-qdisc kmod-qca-nss-drv-vlan-mgr \
 +		kmod-qca8337-nss kmod-qca-dsa-nss kmod-rtl8367s-nss kmod-ifb \
-+		nssinfo nss-tools-dwmac ethtool ip-full tc-full dumpimage
++		nssinfo nss-tools-dwmac ethtool ip-full tc-full dumpimage \
++		sqm-scripts sqm-scripts-nss kmod-sched-cake iperf3
  endef
  TARGET_DEVICES += xunison_exigo-hub-d50-5g
  

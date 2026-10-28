@@ -15,6 +15,7 @@ fwtool
 getrandom
 hostapd-common
 ip-full
+iperf3
 ipq-wifi-xunison_exigo-hub-d50-5g
 iw
 jansson4
@@ -62,7 +63,6 @@ kmod-mii
 kmod-nf-conntrack
 kmod-nf-flow
 kmod-nf-log
-kmod-nf-log6
 kmod-nf-nat
 kmod-nf-reject
 kmod-nf-reject6
@@ -91,6 +91,7 @@ kmod-qrtr
 kmod-qrtr-mhi
 kmod-qrtr-smd
 kmod-rtl8367s-nss
+kmod-sched-cake
 kmod-sched-core
 kmod-slhc
 kmod-thermal
@@ -107,6 +108,7 @@ kmod-usb-wdm
 kmod-usb-xhci-hcd
 kmod-usb3
 kmod-wwan
+libatomic1
 libblkid1
 libblobmsg-json20260721
 libbpf1
@@ -116,6 +118,7 @@ libe2p2
 libelf1
 libext2fs2
 libgcc1
+libiperf3
 libjson-c5
 libjson-script20260721
 libmbedtls21
@@ -154,6 +157,8 @@ ppp-mod-pppoe
 procd
 procd-seccomp
 procd-ujail
+sqm-scripts
+sqm-scripts-nss
 tc-full
 terminfo
 ubi-utils
