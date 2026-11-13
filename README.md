@@ -54,7 +54,7 @@ It's on by default in this image. `logread -e conwatch` shows what it's done. Se
 
 - **Leave Wi-Fi offload on** (`nss.general.wifi_offload=1`). The modem path only works with `redirect=1`, and turning Wi-Fi offload off while `redirect=1` will crash the 2.4 GHz radio firmware (`crash detected in q6wcss`) within a minute or two.
 - **Don't stop ECM to test without acceleration.** ECM sets `redirect` itself (`1` when it starts, `0` when it stops), the modem path needs `redirect=1`, and `/etc/init.d/qca-nss-ecm stop` takes a raw-IP modem offline. To take acceleration out of the picture, stop ECM's front ends instead: `echo 1 > /sys/kernel/debug/ecm/front_end_ipv4_stop` and, if you use IPv6, `echo 1 > /sys/kernel/debug/ecm/front_end_ipv6_stop` (`echo 0` to both to undo).
-- **Upload shaping:** kuncy7's NSS shaper (`sqm-scripts-nss`) can't shape the upload on a D50 as it only shapes the Ethernet ports and the upload goes out on `wwan0`. Use software cake on `wwan0` instead (that's what unRAVEL does); accelerated uploads pass that queue.
+- **Upload shaping:** the NSS shaper only covers the Ethernet ports, not the modem, so the upload is shaped by unRAVEL with cake on `wwan0`. This works with NSS offload on.
 - The "debugfs: 'rmnet_rx' already exists" warning after a re-connect is harmless.
 
 ## History
