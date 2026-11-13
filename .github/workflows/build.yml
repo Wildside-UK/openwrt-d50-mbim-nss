@@ -4,9 +4,59 @@ on:
   push:
     branches: [ci]
   workflow_dispatch:
+    inputs:
+      bump_tag:
+        description: "kuncy7 release to move to (ci/bump.sh), then build it on bump/<tag>. Empty = plain build."
+        required: false
+        default: ""
 
 jobs:
+  # Only with bump_tag: move every pin to that kuncy7 release and push the
+  # result to bump/<tag>, which the build below then builds. Pushes made with
+  # this workflow's own token start no workflows, so this can't loop.
+  bump:
+    if: inputs.bump_tag != ''
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+    outputs:
+      ref: ${{ steps.push.outputs.ref }}
+      sha: ${{ steps.push.outputs.sha }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Move the pins
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ inputs.bump_tag }}
+        run: |
+          sudo apt-get install -y -qq squashfs-tools
+          if ! ci/bump.sh "$TAG" "$RUNNER_TEMP/bump" 2> "$RUNNER_TEMP/bump.err"; then
+            cat "$RUNNER_TEMP/bump.err"
+            { echo '### Bump stopped'; echo; echo '```'; cat "$RUNNER_TEMP/bump.err"; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
+            exit 1
+          fi
+          cat "$RUNNER_TEMP/bump/summary.txt" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Push bump branch
+        id: push
+        env:
+          TAG: ${{ inputs.bump_tag }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git diff --cached --quiet && { echo "nothing to change"; exit 1; }
+          git commit -q -m "Move to $TAG" -m "Pins, config, feeds, kernel hash and package list taken from kuncy7's $TAG release by ci/bump.sh."
+          git push -q origin "HEAD:refs/heads/bump/$TAG"
+          echo "ref=bump/$TAG" >> "$GITHUB_OUTPUT"
+          echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+
   build:
+    needs: bump
+    if: ${{ !cancelled() && (needs.bump.result == 'success' || needs.bump.result == 'skipped') }}
     # Same image either way; the arm64 job's Image Builder runs on an aarch64 host.
     strategy:
       fail-fast: false
@@ -36,6 +86,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           path: repo
+          ref: ${{ needs.bump.outputs.ref || github.ref }}
 
       - name: Build
         run: repo/ci/build.sh "$GITHUB_WORKSPACE/openwrt"
@@ -58,7 +109,7 @@ jobs:
       - uses: actions/upload-artifact@v4
         with:
           if-no-files-found: error
-          name: d50-nss-${{ matrix.arch }}-${{ github.sha }}
+          name: d50-nss-${{ matrix.arch }}-${{ needs.bump.outputs.sha || github.sha }}
           path: out/
           retention-days: 30
 
@@ -66,6 +117,6 @@ jobs:
         if: failure()
         uses: actions/upload-artifact@v4
         with:
-          name: d50-nss-logs-${{ matrix.arch }}-${{ github.sha }}
+          name: d50-nss-logs-${{ matrix.arch }}-${{ needs.bump.outputs.sha || github.sha }}
           path: openwrt/logs/
           retention-days: 14
