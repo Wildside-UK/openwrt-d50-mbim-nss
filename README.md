@@ -4,7 +4,7 @@ Full NSS offload on the Xunison (Zearts) Exigo Hub D50 5G, with the Quectel RM50
 
 The image is kuncy7's IPQ5018 NSS release ([kuncy7/openwrt-nss-edma](https://github.com/kuncy7/openwrt-nss-edma), `ipq50xx-2026.11.11`) built from his published config and feed pins, with the `umbim` fix from [openwrt/openwrt#25946](https://github.com/openwrt/openwrt/pull/25946). Without it an MBIM connection comes up with no DNS servers, so the internet works but nothing resolves. #25946 was merged into OpenWrt on 12 Nov, the day after kuncy7's 11.11 release, so it's still carried here. Once his releases pick it up, this patch goes.
 
-On top of that the image has two extras for a cellular link: [unRAVEL](#unravel-upload-shaping) for upload shaping (installed, switched off) and [conwatch](#conwatch), a watchdog that brings the connection back when it dies. Without those two, the package list is identical to kuncy7's own D50 image, and the build checks that. The plain image without them is in `plain/` in each release.
+On top of that the image has two extras for a cellular link: [unRAVEL](#unravel-upload-shaping) for upload shaping (installed, switched off) and [conwatch](#conwatch), a watchdog that brings the connection back when it dies. Without those two, the package list is identical to kuncy7's own D50 image, and the build checks that.
 
 ## Downloads
 
@@ -12,8 +12,7 @@ Each release has:
 
 - `...-squashfs-sysupgrade.bin`: flash over a running OpenWrt.
 - `...-squashfs-factory.img`: for U-Boot web recovery.
-- `plain/`: the same two images without unRAVEL and conwatch.
-- `openwrt-imagebuilder-...Linux-x86_64.tar.zst` and `...Linux-aarch64.tar.zst`: Image Builders for adding your own packages and config. They make the plain image.
+- `openwrt-imagebuilder-...Linux-x86_64.tar.zst` and `...Linux-aarch64.tar.zst`: Image Builders for adding your own packages and config. They don't include unRAVEL or conwatch.
 - `image-packages.txt` and `sha256sums`.
 
 Kernel modules for this build come from kuncy7's repository for the same release, which the image already lists.
@@ -21,7 +20,7 @@ Kernel modules for this build come from kuncy7's repository for the same release
 ## What works
 
 - `nss-status`: offload active, Wi-Fi offload (wifili) on both radios, ECM accelerating the modem flows.
-- Download 103-106 Mbit/s on Speedtest, limited by the cell rather than the router (NSS core load ~3%).
+- A marked improvement in download speed, limited by the cell rather than the router (NSS core load ~3%).
 - The firmware's deliveries to the host go to the second CPU core, leaving the first to the modem (kuncy7's `nss-irq-affinity`, no script needed).
 - DNS from the network on `wwan` by default; with `peerdns 0` the servers stay out of `resolv.conf.auto` and show as inactive in `ifstatus wwan`.
 

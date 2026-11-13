@@ -9,7 +9,7 @@
   - `patches/openwrt/0001`: the NSS packages (and kuncy7's sqm/iperf3 set) in the D50's `DEVICE_PACKAGES`, so the Image Builder's default image matches the build's own. It also comments out five boards (cmcc_rax3000q, glinet_gl-x2000, linksys_mr2000, tplink_re700x, wallys_dr5018s) whose device trees reference labels the tree no longer defines, which an Image Builder build would otherwise trip over. Still the case in 11.11.
   - `patches/openwrt/0002`: `base-files` takes `distfeeds.list` from `files/`, so images made with the Image Builder also point `apk` at kuncy7's feed, whose kernel modules match this kernel.
 
-- **Published image:** `ci/public.sh` runs the Image Builder from the same build once more with two extras: the unRAVEL-cellular package (fetched from its GitHub release, sha256 checked) installed but not enabled, with the config in `public/files/etc/config/unravel`, and conwatch (`public/files`), enabled. The plain image and both Image Builders stay as built.
+- **Published image:** `ci/public.sh` runs the Image Builder from the same build once more with two extras: the unRAVEL-cellular package (fetched from its GitHub release, sha256 checked) installed but not enabled, with the config in `public/files/etc/config/unravel`, and conwatch (`public/files`), enabled. Only that image is published. The plain image is built and checked but not shipped, and both Image Builders stay as built (without unRAVEL or conwatch).
 
 To build locally: `ci/build.sh <work-dir>` on a normal OpenWrt build host.
 

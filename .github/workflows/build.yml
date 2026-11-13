@@ -49,13 +49,11 @@ jobs:
       - name: Collect release files
         run: |
           B=openwrt/bin/targets/qualcommax/ipq50xx
-          mkdir -p out/plain
+          mkdir -p out
           cp "$RUNNER_TEMP"/public/* out/
-          cp $B/*xunison_exigo-hub-d50-5g*sysupgrade.bin $B/*xunison_exigo-hub-d50-5g*factory.img out/plain/
-          cp "$RUNNER_TEMP/verify/image/packages.txt" out/plain/image-packages.txt
           cp $B/openwrt-imagebuilder-*.tar.zst $B/config.buildinfo $B/feeds.buildinfo $B/version.buildinfo out/
-          (cd out && sha256sum *.bin *.img *.tar.zst plain/*.bin plain/*.img > sha256sums)
-          ls -la out out/plain
+          (cd out && sha256sum *.bin *.img *.tar.zst > sha256sums)
+          ls -la out
 
       - uses: actions/upload-artifact@v4
         with:
