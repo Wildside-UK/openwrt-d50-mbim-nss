@@ -2,7 +2,7 @@
 
 Full NSS offload on the Xunison (Zearts) Exigo Hub D50 5G, with the Quectel RM500Q-AE on the upstream PCIe/MBIM stack (`mhi_wwan_mbim` + `umbim`, netdev `wwan0`).
 
-The image is kuncy7's IPQ5018 NSS release ([kuncy7/openwrt-nss-edma](https://github.com/kuncy7/openwrt-nss-edma), `ipq50xx-2026.11.11`) built from his published config and feed pins, with the `umbim` fix from [openwrt/openwrt#25946](https://github.com/openwrt/openwrt/pull/25946). Without it an MBIM connection comes up with no DNS servers. #25946 was merged into OpenWrt on 12 Nov, the day after kuncy7's 11.11 release, so it's still carried here. Once his releases pick it up, this patch goes.
+The image is kuncy7's IPQ5018 NSS release ([kuncy7/openwrt-nss-edma](https://github.com/kuncy7/openwrt-nss-edma), `ipq50xx-2026.11.09`) built from his published config and feed pins, with the `umbim` fix from [openwrt/openwrt#25946](https://github.com/openwrt/openwrt/pull/25946). Without it an MBIM connection comes up with no DNS servers. #25946 was merged into OpenWrt on 12 Nov, the day after kuncy7's 11.11 release, so it's still carried here. Once his releases pick it up, this patch goes.
 
 On top of that the image has two extras for a cellular link: [unRAVEL](#unravel-upload-shaping) for upload shaping (installed, switched off) and [conwatch](#conwatch), a watchdog that brings the connection back when it dies. Without those two, the package list is identical to kuncy7's own D50 image, and the build checks that.
 
