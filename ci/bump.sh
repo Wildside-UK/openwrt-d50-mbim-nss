@@ -18,7 +18,11 @@ echo "== $OLD -> $TAG"
 [ "$OLD" != "$TAG" ] || { echo "already on $TAG"; exit 0; }
 
 echo "== tree revision from the release notes"
-BODY=${BUMP_RELEASE_BODY:-$(gh release view "$TAG" -R "$K" --json body -q .body)}
+if [ -z "${BUMP_RELEASE_BODY:-}" ]; then
+	BODY=$(gh release view "$TAG" -R "$K" --json body -q .body 2>/dev/null) || stop "release $TAG not found in $K"
+else
+	BODY=$BUMP_RELEASE_BODY
+fi
 SHORTS=$(printf '%s\n' "$BODY" | grep -oiE 'built from `[0-9a-f]{7,40}`' | grep -oE '[0-9a-f]{7,40}' | sort -u || true)
 [ "$(printf '%s' "$SHORTS" | grep -c .)" = 1 ] || stop "release $TAG: no single 'built from \`<sha>\`' line in the notes (found: ${SHORTS:-none})"
 REV=$(gh api "repos/$K/commits/$SHORTS" --jq .sha 2>/dev/null) || stop "release $TAG: $SHORTS does not resolve to one commit in $K"
