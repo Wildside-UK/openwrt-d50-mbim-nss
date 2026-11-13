@@ -34,6 +34,11 @@ IFUP_RETRY=600           # once reboots are spent, ifup this often (s)
 log() { logger -t "$TAG" "$*"; }
 uptime_s() { cut -d. -f1 /proc/uptime; }
 
+# Is there an interface by that name at all? On a fresh install the modem
+# may not be set up yet, or the interface may have another name: then do
+# nothing rather than treat it as a dead connection.
+configured() { uci -q get "network.$IFACE" >/dev/null; }
+
 # Healthy = netifd says up AND any target answers (two tries each).
 healthy() {
 	ifstatus "$IFACE" 2>/dev/null | grep -q '"up": true' || return 1
@@ -147,8 +152,18 @@ main() {
 	log "started: dry_run=$DRY_RUN fails=$FAILS_BEFORE_ACT x ${INTERVAL}s, ifup ${IFUP_TRIES}x${IFUP_WAIT}s, grace ${GRACE}s, reboots max $REBOOT_MAX gap ${REBOOT_GAP}s, count $COUNT, after_wd $AFTER_WD"
 	fails=0
 	healthy_since=
+	unconfigured_logged=
 	while :; do
 		up=$(uptime_s)
+		if ! configured; then
+			[ -n "$unconfigured_logged" ] || log "no interface '$IFACE' in /etc/config/network, doing nothing until there is (IFACE in $CONF)"
+			unconfigured_logged=1
+			fails=0
+			sleep "$INTERVAL"
+			continue
+		fi
+		[ -n "$unconfigured_logged" ] && log "interface '$IFACE' is there now, watching it"
+		unconfigured_logged=
 		if healthy; then
 			[ "$fails" -ge 2 ] && log "path back after $fails failed checks"
 			fails=0

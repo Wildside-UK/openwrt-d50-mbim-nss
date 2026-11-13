@@ -43,7 +43,7 @@ It only shapes the upload. Download is left alone. `logread -e unravel` shows wh
 
 ## conwatch
 
-conwatch watches the data path, not the modem. Every 30 s it checks that `wwan` is up and that 9.9.9.9, 149.112.112.11 or 1.1.1.1 answers a ping. After 4 failed checks in a row it runs `ifup wwan`, waits 2 minutes, tries once more, and if the connection still isn't back it reboots the router. At most 3 reboots, 30 minutes apart, then it just keeps trying `ifup`. The count resets after 6 hours of working connection. It does nothing in the first 5 minutes after boot, and never touches the modem's AT port.
+conwatch watches the data path, not the modem. Every 30 s it checks that `wwan` is up and that 9.9.9.9, 149.112.112.11 or 1.1.1.1 answers a ping. After 4 failed checks in a row it runs `ifup wwan`, waits 2 minutes, tries once more, and if the connection still isn't back it reboots the router. At most 3 reboots, 30 minutes apart, then it just keeps trying `ifup`. The count resets after 6 hours of working connection. It does nothing in the first 5 minutes after boot, or while there's no interface called `wwan` (so a router whose modem isn't set up yet is left alone; if yours has another name, set `IFACE` in `/etc/conwatch.conf`). It never touches the modem's AT port.
 
 It's on in this image. `logread -e conwatch` shows what it's done. Settings are in `/etc/conwatch.conf`.
 
