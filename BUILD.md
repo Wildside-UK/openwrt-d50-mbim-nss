@@ -2,7 +2,7 @@
 
 `ci/build.sh` builds the image and its Image Builder from pinned sources, and GitHub Actions runs it on every push to `ci` (`.github/workflows/build.yml`), once on x86_64 and once on arm64.
 
-- **Tree:** kuncy7/openwrt-nss-edma at `047ee4cea1` (release `ipq50xx-2026.11.09`).
+- **Tree:** kuncy7/openwrt-nss-edma at `2812566353` (release `ipq50xx-2026.11.11`).
 - **Config and feeds:** kuncy7's published `diffconfig-std.txt` and `feeds-std.buildinfo` for that release (`ci/diffconfig`, `ci/feeds.conf`), plus the Image Builder and the optional packages it needs.
 - **Patches:**
   - `patches/umbim/0001`: openwrt/openwrt#25946, the network's DNS servers registered as peer DNS. Merged into OpenWrt on 12 Nov 2026, after 11.11, so still needed here until kuncy7's tree has it.
@@ -17,8 +17,8 @@ To build locally: `ci/build.sh <work-dir>` on a normal OpenWrt build host.
 
 `ci/verify.sh` fails the build unless:
 
-- the image's package list equals `ci/expected-packages.txt` (kuncy7's 11.09 D50 image),
-- the kernel is kuncy7's 11.09 kernel,
+- the image's package list equals `ci/expected-packages.txt` (kuncy7's 11.11 D50 image),
+- the kernel is kuncy7's 11.11 kernel,
 - `qca-nss-drv` carries the raw-IP egress fix,
 - `mbim.sh` registers the peer DNS,
 - the package feeds point at kuncy7's repository,

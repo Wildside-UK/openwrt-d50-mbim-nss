@@ -9,7 +9,7 @@ B=$WORK/bin/targets/qualcommax/ipq50xx
 U=$WORK/staging_dir/host/bin/unsquashfs4
 OD=$(ls "$WORK"/staging_dir/toolchain-*/bin/aarch64-openwrt-linux-musl-objdump)
 DEVICE=xunison_exigo-hub-d50-5g
-KERNEL_HASH=3a29db6d5d252c254d43cbe580220680   # kuncy7's ipq50xx-2026.11.09 kernel
+KERNEL_HASH=3a29db6d5d252c254d43cbe580220680   # kuncy7's ipq50xx-2026.11.11 kernel
 fail=0
 bad() { echo "FAIL: $*"; fail=1; }
 
