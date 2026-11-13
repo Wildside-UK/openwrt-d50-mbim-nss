@@ -1,0 +1,28 @@
+# unRAVEL upload shaper for the D50's cellular link. Installed but not running.
+# Set upload_base_kbits to the top upload speed your connection gets, then:
+#   /etc/init.d/unravel enable && /etc/init.d/unravel start
+config network
+	option download_interface 'none'
+	option upload_interface 'wwan0'
+	option upload_base_kbits '100000'
+	option upload_min_percent '3'
+
+config output
+	option log_level 'warn'
+	option suppress_statistics '1'
+	option use_syslog '1'
+
+config observability
+	option enabled '0'
+
+config reflectors
+	list files '/etc/unravel/reflectors.csv'
+	option num_reflectors '5'
+	option peer_reselection_time '15'
+
+config advanced_settings
+	option upload_delay_ms '25'
+	option low_load_cut_floor '0.7'
+	option low_load_level '0.3'
+	option idle_recovery_percent '3'
+	option history_file '/tmp/unravel-history'

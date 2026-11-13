@@ -110,7 +110,7 @@ kmod-usb3
 kmod-wwan
 libatomic1
 libblkid1
-libblobmsg-json20260721
+libblobmsg-json20261103
 libbpf1
 libc
 libcomerr0
@@ -120,7 +120,7 @@ libext2fs2
 libgcc1
 libiperf3
 libjson-c5
-libjson-script20260721
+libjson-script20261103
 libmbedtls21
 libmnl0
 libncurses6
@@ -131,8 +131,8 @@ libpthread
 librt
 libsmartcols1
 libss2
-libubox20260721
-libubus20260925
+libubox20261103
+libubus20261028
 libuci20250120
 libuclient20201210
 libucode20261009

@@ -43,15 +43,19 @@ jobs:
       - name: Verify
         run: repo/ci/verify.sh "$GITHUB_WORKSPACE/openwrt" "$RUNNER_TEMP/verify"
 
+      - name: Published image (unRAVEL installed but off, conwatch on)
+        run: repo/ci/public.sh "$GITHUB_WORKSPACE/openwrt" "$RUNNER_TEMP/verify" "$RUNNER_TEMP/public"
+
       - name: Collect release files
         run: |
           B=openwrt/bin/targets/qualcommax/ipq50xx
-          mkdir out
-          cp $B/*xunison_exigo-hub-d50-5g*sysupgrade.bin $B/*xunison_exigo-hub-d50-5g*factory.img \
-             $B/openwrt-imagebuilder-*.tar.zst $B/config.buildinfo $B/feeds.buildinfo $B/version.buildinfo out/
-          cp "$RUNNER_TEMP/verify/image/packages.txt" out/image-packages.txt
-          (cd out && sha256sum *.bin *.img *.tar.zst > sha256sums)
-          ls -la out
+          mkdir -p out/plain
+          cp "$RUNNER_TEMP"/public/* out/
+          cp $B/*xunison_exigo-hub-d50-5g*sysupgrade.bin $B/*xunison_exigo-hub-d50-5g*factory.img out/plain/
+          cp "$RUNNER_TEMP/verify/image/packages.txt" out/plain/image-packages.txt
+          cp $B/openwrt-imagebuilder-*.tar.zst $B/config.buildinfo $B/feeds.buildinfo $B/version.buildinfo out/
+          (cd out && sha256sum *.bin *.img *.tar.zst plain/*.bin plain/*.img > sha256sums)
+          ls -la out out/plain
 
       - uses: actions/upload-artifact@v4
         with:
