@@ -13,6 +13,7 @@ Each release has:
 - `...-squashfs-sysupgrade.bin`: flash over a running OpenWrt.
 - `...-squashfs-factory.img`: for U-Boot web recovery.
 - `openwrt-imagebuilder-...Linux-x86_64.tar.zst` and `...Linux-aarch64.tar.zst`: Image Builders for adding your own packages and config. They don't include unRAVEL or conwatch.
+- `kuncy7-ipq50xx-2026.11.11.pem`: the key kuncy7 signed this release's kmod feed with. It's already in the images; if you build your own with an Image Builder, put it in `files/etc/apk/keys/` or `apk add kmod-...` won't trust the feed.
 - `image-packages.txt` and `sha256sums`.
 
 Kernel modules for this build come from kuncy7's repository for the same release, which the image already lists.
