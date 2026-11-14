@@ -58,6 +58,12 @@ sed -i "s|^KERNEL_HASH=.*|KERNEL_HASH=$KH   # kuncy7's $TAG kernel|" "$HERE/veri
 sed -i "s|$OLD|$TAG|g" "$HERE/distfeeds.list"
 grep -q "/$TAG/std/" "$HERE/distfeeds.list" || stop "ci/distfeeds.list did not take $TAG"
 
+echo "== the key $TAG's std feed is signed with (ci/build.sh fetches it again for the image)"
+"$HERE/kuncy7-key.py" "$HERE/distfeeds.list" "$T/key" "$T/key-tmp" > "$T/key.log" 2>&1 \
+	|| { cat "$T/key.log"; stop "release $TAG: no std image of the release carries the key its feed is signed with"; }
+cat "$T/key.log"
+FEEDKEY=$(grep -oE 'signed by key id\(s\): .*' "$T/key.log" | sed 's/.*: //')
+
 echo "== tree and patches"
 if [ ! -d "$T/tree/.git" ]; then git clone -q --filter=blob:none "https://github.com/$K.git" "$T/tree"; fi
 git -C "$T/tree" fetch -q origin "$REV"
@@ -87,7 +93,7 @@ sed -i -E "s/kuncy7's $O (D50 image|kernel)/kuncy7's $N \1/g" "$REPO/BUILD.md"
 
 {
 	echo "TAG=$TAG"; echo "OLD=$OLD"; echo "REV=$REV"; echo "KERNEL=$KV"
-	echo "UMBIM_DROPPED=$UMBIM_DROPPED"
+	echo "UMBIM_DROPPED=$UMBIM_DROPPED"; echo "FEEDKEY=$FEEDKEY"
 	echo "PACKAGES_DIFF<<EOF"; git -C "$REPO" diff -U0 -- ci/expected-packages.txt | grep '^[-+][^-+]' || echo "(none)"; echo "EOF"
 	echo "TEXT_LEFT<<EOF"; grep -nE "\b${O//./\\.}\b" "$REPO/README.md" "$REPO/BUILD.md" || echo "(none)"; echo "EOF"
 } > "$T/summary.txt"

@@ -23,6 +23,21 @@ unpack() {
 	grep '^P:' "$2/rootfs/lib/apk/db/installed" | sed 's/^P://' | sort > "$2/packages.txt"
 }
 
+# $1 = unpacked rootfs: apk, with only that image's keys, must call kuncy7's
+# std feed (the first line of its feed list) trusted.
+feed_trusted() {
+	local url adb out
+	url=$(grep -m1 '^https://kuncy7.github.io/.*/std/packages.adb$' "$1/etc/apk/repositories.d/distfeeds.list") \
+		|| { bad "no kuncy7 std feed in the image"; return; }
+	adb=$T/kuncy7-std.adb
+	wget -q -O "$adb" "$url" || { bad "could not fetch $url"; return; }
+	ls "$1"/etc/apk/keys/kuncy7-ipq50xx-*.pem >/dev/null 2>&1 || bad "no kuncy7 key in /etc/apk/keys"
+	out=$("$WORK/staging_dir/host/bin/apk" --keys-dir "$1/etc/apk/keys" adbdump "$adb" 2>&1 | grep '^# sig' | sed 's/\(# sig v.. h.. [0-9a-f]\{32\}\)[0-9a-f.]*/\1/' || true)
+	echo "$out"
+	echo "$out" | grep -q ': OK$' || bad "kuncy7's feed is not trusted by the image's keys"
+	if echo "$out" | grep -q UNTRUSTED; then bad "kuncy7's feed has an UNTRUSTED signature"; fi
+}
+
 unpack "$B"/*"$DEVICE"*sysupgrade.bin "$T/image"
 R=$T/image/rootfs
 
@@ -46,13 +61,17 @@ echo "== package feeds on the router"
 head -1 "$R/etc/apk/repositories.d/distfeeds.list"
 grep -q '^https://kuncy7.github.io/' "$R/etc/apk/repositories.d/distfeeds.list" || bad "distfeeds.list lacks kuncy7's feed"
 
+echo "== kuncy7's feed is trusted by the image's own keys"
+feed_trusted "$R"
+
 echo "== Image Builder reproduces the image"
 mkdir -p "$T/ib"
 tar --zstd -xf "$B"/openwrt-imagebuilder-*.tar.zst -C "$T/ib"
-make -C "$T"/ib/openwrt-imagebuilder-* image PROFILE="$DEVICE" > "$T/ib.log" 2>&1 || { tail -40 "$T/ib.log"; bad "Image Builder failed"; }
+make -C "$T"/ib/openwrt-imagebuilder-* image PROFILE="$DEVICE" FILES="$WORK/files" > "$T/ib.log" 2>&1 || { tail -40 "$T/ib.log"; bad "Image Builder failed"; }
 unpack "$T"/ib/openwrt-imagebuilder-*/bin/targets/qualcommax/ipq50xx/*"$DEVICE"*sysupgrade.bin "$T/ibimage"
 diff "$T/image/packages.txt" "$T/ibimage/packages.txt" || bad "Image Builder package set differs"
 diff <(cd "$R" && find . | sort) <(cd "$T/ibimage/rootfs" && find . | sort) || bad "Image Builder file list differs"
+cmp "$R"/etc/apk/keys/kuncy7-ipq50xx-*.pem "$T"/ibimage/rootfs/etc/apk/keys/kuncy7-ipq50xx-*.pem || bad "Image Builder kuncy7 key differs"
 cmp "$T"/image/sysupgrade-*/kernel "$T"/ibimage/sysupgrade-*/kernel || bad "Image Builder kernel differs"
 
 [ "$fail" = 0 ] && echo "ALL CHECKS PASSED" || { echo "CHECKS FAILED"; exit 1; }

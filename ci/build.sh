@@ -31,6 +31,11 @@ echo "== package feed list on the router (kuncy7's feed first, kmods match this 
 mkdir -p files/etc/apk/repositories.d
 cp "$HERE/distfeeds.list" files/etc/apk/repositories.d/distfeeds.list
 
+echo "== kuncy7's signing key for that feed (new every release, only shipped inside his images)"
+mkdir -p files/etc/apk/keys
+rm -f files/etc/apk/keys/kuncy7-ipq50xx-*.pem
+"$HERE/kuncy7-key.py" "$HERE/distfeeds.list" files/etc/apk/keys "$WORK/../kuncy7-key"
+
 echo "== config"
 cp "$HERE/diffconfig" .config
 make defconfig

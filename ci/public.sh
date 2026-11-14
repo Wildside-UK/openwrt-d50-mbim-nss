@@ -25,8 +25,12 @@ echo "== Image Builder"
 tar --zstd -xf "$B"/openwrt-imagebuilder-*.tar.zst -C "$T/pub"
 IB=$(echo "$T"/pub/openwrt-imagebuilder-*)
 cp "$T/pub/unravel-cellular.apk" "$IB/packages/unravel-cellular-0.5.0_rc1_p5-r1.apk"
+# public/files plus the build's own files/ (feed list and kuncy7's feed key)
+rm -rf "$T/pub/files"; mkdir -p "$T/pub/files"
+cp -a "$WORK/files/." "$T/pub/files/"
+cp -a "$REPO/public/files/." "$T/pub/files/"
 make -C "$IB" image PROFILE="$DEVICE" PACKAGES="unravel-cellular" \
-	FILES="$REPO/public/files" DISABLED_SERVICES="unravel" BIN_DIR="$T/pub/bin" > "$T/pub/ib.log" 2>&1 \
+	FILES="$T/pub/files" DISABLED_SERVICES="unravel" BIN_DIR="$T/pub/bin" > "$T/pub/ib.log" 2>&1 \
 	|| { tail -60 "$T/pub/ib.log"; exit 1; }
 
 echo "== checks"
@@ -50,6 +54,10 @@ done
 grep -q '^DRY_RUN=0' "$R/etc/conwatch.conf" || bad "conwatch is not live"
 grep -q proto_add_dns_server "$R/lib/netifd/proto/mbim.sh" || bad "mbim.sh does not register peer DNS"
 grep -q '^https://kuncy7.github.io/' "$R/etc/apk/repositories.d/distfeeds.list" || bad "distfeeds.list lacks kuncy7's feed"
+cmp "$R"/etc/apk/keys/kuncy7-ipq50xx-*.pem "$WORK"/files/etc/apk/keys/kuncy7-ipq50xx-*.pem || bad "kuncy7 feed key missing or differs"
+out=$("$WORK/staging_dir/host/bin/apk" --keys-dir "$R/etc/apk/keys" adbdump "$T/kuncy7-std.adb" 2>&1 | grep '^# sig' | sed 's/\(# sig v.. h.. [0-9a-f]\{32\}\)[0-9a-f.]*/\1/' || true)
+echo "kuncy7 feed with the published image's keys: $out"
+echo "$out" | grep -q ': OK$' || bad "kuncy7's feed is not trusted by the published image's keys"
 
 mkdir -p "$OUT"
 cp "$T"/pub/bin/*"$DEVICE"*sysupgrade.bin "$T"/pub/bin/*"$DEVICE"*factory.img "$OUT/"

@@ -81,7 +81,7 @@ jobs:
           multilib=; [ "${{ matrix.arch }}" = x86_64 ] && multilib="gcc-multilib g++-multilib"
           sudo apt-get install -y -qq build-essential clang flex bison g++ gawk $multilib \
             gettext git libncurses-dev libssl-dev \
-            python3-dev python3-setuptools rsync swig unzip zlib1g-dev file wget ccache zstd
+            python3-dev python3-setuptools rsync swig unzip zlib1g-dev file wget ccache zstd squashfs-tools
 
       - uses: actions/checkout@v4
         with:
