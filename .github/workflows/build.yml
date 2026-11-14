@@ -103,7 +103,9 @@ jobs:
           mkdir -p out
           cp "$RUNNER_TEMP"/public/* out/
           cp $B/openwrt-imagebuilder-*.tar.zst $B/config.buildinfo $B/feeds.buildinfo $B/version.buildinfo out/
-          (cd out && sha256sum *.bin *.img *.tar.zst > sha256sums)
+          # kuncy7's feed key (checked by ci/verify.sh): Image Builder users need it in FILES
+          cp openwrt/files/etc/apk/keys/kuncy7-ipq50xx-*.pem out/
+          (cd out && sha256sum *.bin *.img *.tar.zst *.pem > sha256sums)
           ls -la out
 
       - uses: actions/upload-artifact@v4
