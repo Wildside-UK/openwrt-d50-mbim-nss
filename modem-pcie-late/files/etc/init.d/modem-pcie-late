@@ -1,0 +1,15 @@
+#!/bin/sh /etc/rc.common
+# Find the modem on PCIe if it missed the kernel's link wait at boot
+# (first boot after a U-Boot web-recovery install). Runs before modem-at (S12)
+# and network (S20) so they see the modem as on a normal boot. Returns at once
+# when the modem enumerated normally. Worker: /usr/sbin/modem-pcie-late.sh
+
+START=11
+
+boot() {
+	/usr/sbin/modem-pcie-late.sh
+}
+
+start() {
+	/usr/sbin/modem-pcie-late.sh
+}
