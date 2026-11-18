@@ -23,6 +23,7 @@ cp "$HERE/feeds.conf" feeds.conf
 
 echo "== tree patches"
 for p in "$REPO"/patches/openwrt/*.patch "$REPO"/patches/umbim/*.patch; do
+	[ -e "$p" ] || continue   # an empty patches/ folder leaves the glob unexpanded
 	echo "   $(basename "$p")"
 	git apply "$p"
 done
