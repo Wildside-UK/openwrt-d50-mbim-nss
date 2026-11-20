@@ -72,7 +72,7 @@ python3 "$HERE/gen-0001.py" "$T/tree" > "$T/0001.patch" || stop "patches/openwrt
 [ -s "$T/0001.patch" ] || stop "patches/openwrt/0001 came out empty for $TAG"
 cp "$T/0001.patch" "$REPO/patches/openwrt/0001-ipq50xx-d50-nss-device-packages.patch"
 UMBIM_DROPPED=
-if grep -q proto_add_dns_server "$T/tree/package/network/utils/umbim/files/lib/netifd/proto/mbim.sh" 2>/dev/null; then
+if [ -d "$REPO/patches/umbim" ] && grep -q proto_add_dns_server "$T/tree/package/network/utils/umbim/files/lib/netifd/proto/mbim.sh" 2>/dev/null; then
 	echo "   $TAG's mbim.sh already registers peer DNS (openwrt/openwrt#25946): dropping patches/umbim"
 	git -C "$REPO" rm -q -r patches/umbim
 	UMBIM_DROPPED=1
