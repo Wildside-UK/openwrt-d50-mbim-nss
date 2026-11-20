@@ -7,7 +7,7 @@ REPO=$(dirname "$HERE")
 WORK=$1
 
 TREE=https://github.com/kuncy7/openwrt-nss-edma.git
-TREE_REV=37a635bf0f58fe7798ee1b6981730317f3eac7f5   # release ipq50xx-2026.11.18
+TREE_REV=facdbc303784c50ac89c3027db0ab13ae33b5b35   # release ipq50xx-2026.11.20
 DEVICE=xunison_exigo-hub-d50-5g
 
 if [ ! -d "$WORK/.git" ]; then
