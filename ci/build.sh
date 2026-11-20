@@ -7,7 +7,7 @@ REPO=$(dirname "$HERE")
 WORK=$1
 
 TREE=https://github.com/kuncy7/openwrt-nss-edma.git
-TREE_REV=1d295096c485a7f5bae4d86f03127ee12bc3d081   # release ipq50xx-2026.11.17
+TREE_REV=37a635bf0f58fe7798ee1b6981730317f3eac7f5   # release ipq50xx-2026.11.18
 DEVICE=xunison_exigo-hub-d50-5g
 
 if [ ! -d "$WORK/.git" ]; then
@@ -23,6 +23,7 @@ cp "$HERE/feeds.conf" feeds.conf
 
 echo "== tree patches"
 for p in "$REPO"/patches/openwrt/*.patch "$REPO"/patches/umbim/*.patch; do
+	[ -e "$p" ] || continue   # an empty patches/ folder leaves the glob unexpanded
 	echo "   $(basename "$p")"
 	git apply "$p"
 done
