@@ -1,6 +1,6 @@
 #!/bin/bash
 # Make the published image: the Image Builder from this build, plus unRAVEL
-# (installed, not running) and conwatch. The plain image and both Image
+# (installed, not running), conwatch and System > Image Update (d50-update/). The plain image and both Image
 # Builders stay as built. Usage: ci/public.sh <work-dir> <scratch-dir> <out-dir>
 set -euo pipefail
 HERE=$(cd "$(dirname "$0")" && pwd)
@@ -29,6 +29,14 @@ cp "$T/pub/unravel-cellular.apk" "$IB/packages/unravel-cellular-0.5.0_rc1_p5-r1.
 rm -rf "$T/pub/files"; mkdir -p "$T/pub/files"
 cp -a "$WORK/files/." "$T/pub/files/"
 cp -a "$REPO/public/files/." "$T/pub/files/"
+# System > Image Update: the page, and /etc/d50-build naming this image the way its
+# latest.json will (release tag + commit, commit time), written to $T for the signing step
+cp -a "$REPO/d50-update/files/." "$T/pub/files/"
+KTAG=$(grep -oE 'ipq50xx-[0-9]{4}\.[0-9]{2}\.[0-9]{2}' "$HERE/distfeeds.list" | head -1)
+[ -n "$KTAG" ] || { echo "FAIL: no kuncy7 tag in ci/distfeeds.list"; exit 1; }
+printf 'BUILD=d50-%s+%s\nSEQ=%s\n' "$KTAG" "$(git -C "$REPO" rev-parse --short=7 HEAD)" "$(git -C "$REPO" log -1 --format=%ct)" \
+	> "$T/pub/files/etc/d50-build"
+cp "$T/pub/files/etc/d50-build" "$T/d50-build"
 make -C "$IB" image PROFILE="$DEVICE" PACKAGES="unravel-cellular" \
 	FILES="$T/pub/files" DISABLED_SERVICES="unravel" BIN_DIR="$T/pub/bin" > "$T/pub/ib.log" 2>&1 \
 	|| { tail -60 "$T/pub/ib.log"; exit 1; }
@@ -52,6 +60,11 @@ for f in usr/sbin/conwatch.sh etc/init.d/conwatch etc/uci-defaults/99-conwatch; 
 	[ -x "$R/$f" ] || bad "$f missing or not executable"
 done
 grep -q '^DRY_RUN=0' "$R/etc/conwatch.conf" || bad "conwatch is not live"
+[ -x "$R/usr/libexec/rpcd/d50-update" ] && [ -f "$R/www/luci-static/resources/view/system/d50-update.js" ] \
+	|| bad "Image Update page missing"
+cmp "$R/etc/d50-build" "$T/d50-build" || bad "/etc/d50-build differs"
+grep -q "releases/latest/download/latest.json" "$R/etc/config/d50-update" || bad "d50-update config is not the public one"
+ls "$R"/etc/d50-update/keys/* >/dev/null 2>&1 || bad "no Image Update signing key"
 grep -q proto_add_dns_server "$R/lib/netifd/proto/mbim.sh" || bad "mbim.sh does not register peer DNS"
 grep -q '^https://kuncy7.github.io/' "$R/etc/apk/repositories.d/distfeeds.list" || bad "distfeeds.list lacks kuncy7's feed"
 cmp "$R"/etc/apk/keys/kuncy7-ipq50xx-*.pem "$WORK"/files/etc/apk/keys/kuncy7-ipq50xx-*.pem || bad "kuncy7 feed key missing or differs"

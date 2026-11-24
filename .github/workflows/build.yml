@@ -108,6 +108,26 @@ jobs:
           (cd out && sha256sum *.bin *.img *.tar.zst *.pem > sha256sums)
           ls -la out
 
+      # latest.json for System > Image Update: points at this build's files in the
+      # release named after it (d50-<kuncy7 tag>), signed with the D50_UPDATE_KEY secret
+      # (public key in public/files/etc/d50-update/keys). No secret = no latest.json.
+      - name: Image Update manifest
+        env:
+          KEY: ${{ secrets.D50_UPDATE_KEY }}
+        run: |
+          if [ -z "$KEY" ]; then echo "::warning::no D50_UPDATE_KEY secret, no latest.json"; exit 0; fi
+          sudo apt-get install -y -qq signify-openbsd
+          . "$RUNNER_TEMP/verify/d50-build"
+          TAG=${BUILD%%+*}
+          U=https://github.com/${{ github.repository }}/releases/download/$TAG
+          IMG=openwrt-qualcommax-ipq50xx-xunison_exigo-hub-d50-5g-squashfs-sysupgrade.bin
+          umask 077; printf '%s\n' "$KEY" > "$RUNNER_TEMP/update.sec"
+          repo/d50-update/mkmanifest.sh "out/$IMG" "$BUILD" "$SEQ" "$RUNNER_TEMP/update.sec" out \
+            "$U/$IMG" "${TAG#d50-}" "" "$U/image-packages.txt"
+          rm -f "$RUNNER_TEMP/update.sec"
+          signify-openbsd -V -p repo/public/files/etc/d50-update/keys/* -m out/latest.json -x out/latest.json.sig
+          cat out/latest.json
+
       - uses: actions/upload-artifact@v4
         with:
           if-no-files-found: error
