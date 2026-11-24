@@ -17,7 +17,6 @@
 
 D=/tmp/d50-update
 KEYS=/etc/d50-update/keys
-HOOKS=/etc/d50-update/pre-flash.d
 STAMP=/etc/d50-build
 FW=/tmp/firmware.bin
 
@@ -147,9 +146,6 @@ do_flash() {
 	[ "$(sha256sum "$FW" | cut -d' ' -f1)" = "$(mf sha256)" ] || fail "$FW changed after it was verified"
 	opt=
 	[ "$(cfg keep_settings)" = 0 ] && opt=-n
-	for h in "$HOOKS"/*; do
-		[ -x "$h" ] && { log "pre-flash: $h"; "$h" >/dev/null 2>&1; }
-	done
 	setstate flashing "Flashing"
 	log "flashing $(mf build) (sysupgrade $opt)"
 	( sleep 2; exec /sbin/sysupgrade $opt "$FW" ) </dev/null >/dev/null 2>&1 &
