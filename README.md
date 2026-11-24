@@ -61,7 +61,7 @@ It only checks when you open the page, it never updates on its own. `logread -e 
 
 To use it with your own builds, change `manifest_url` in `/etc/config/d50-update` and put your public key in `/etc/d50-update/keys/` (usign or signify, named by its fingerprint). `d50-update/mkmanifest.sh` makes and signs the `latest.json`.
 
-It's in the images from the release after `d50-ipq50xx-2026.11.11` on. Older images need flashing by hand once to get it.
+It's in the images from `d50-ipq50xx-2026.11.23` on. Older images need flashing by hand once to get it.
 
 ## Things to know
 

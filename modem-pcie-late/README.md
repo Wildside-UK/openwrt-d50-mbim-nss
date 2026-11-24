@@ -30,7 +30,7 @@ It logs to the kernel log (`dmesg | grep modem-pcie-late`) as it runs before log
 
 The miss only happens on the first boot of a fresh web-recovery install, so the script has to be **baked into the image you install**. Copying it onto a running router won't help since you'll already be running on the firmware and needing a reboot.
 
-It's in the images from this repo from the release after `d50-ipq50xx-2026.11.11` on. For your own Image Builder build, add the two files under `files/`:
+It's in the images from this repo from `d50-ipq50xx-2026.11.23` on. For your own Image Builder build, add the two files under `files/`:
 
 ```
 files/usr/sbin/modem-pcie-late.sh
