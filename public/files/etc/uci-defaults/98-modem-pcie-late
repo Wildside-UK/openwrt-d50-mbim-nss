@@ -1,0 +1,3 @@
+#!/bin/sh
+/etc/init.d/modem-pcie-late enable
+exit 0

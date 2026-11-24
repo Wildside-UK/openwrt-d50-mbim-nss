@@ -43,13 +43,25 @@ It only shapes the upload. Download is left alone (NSS should be left to manage 
 
 ## conwatch
 
-conwatch watches the data path, not the modem. Every 30 s it checks that `wwan` is up and that 9.9.9.9, 149.112.112.11 or 1.1.1.1 answers a ping. After 4 failed checks in a row it runs `ifup wwan`, waits 2 minutes, tries once more, and if the connection still isn't back it reboots the router. At most 3 reboots, 30 minutes apart, then it just keeps trying `ifup`. The count resets after 6 hours of working connection. It does nothing in the first 5 minutes after boot, or while there's no interface called `wwan` (so a router whose modem isn't set up yet is left alone; if you setup has another name, set `IFACE` in `/etc/conwatch.conf`). It never touches the modem's AT port.
+conwatch watches the data path, not the modem. Every 30 s it checks that `wwan` is up and that 9.9.9.9, 149.112.112.11 or 1.1.1.1 answers a ping. After 4 failed checks in a row it runs `ifup wwan`, waits 2 minutes, tries once more, and if the connection still isn't back it reboots the router. At most 3 reboots, 30 minutes apart, then it just keeps trying `ifup`. The count resets after 6 hours of working connection. It does nothing in the first 5 minutes after boot, or while there's no interface called `wwan` (so a router whose modem isn't set up yet is left alone; if your setup has another name, set `IFACE` in `/etc/conwatch.conf`). It never touches the modem's AT port.
 
 It's on by default in this image. `logread -e conwatch` shows what it's done. Settings are in `/etc/conwatch.conf`.
 
 - Pause it (until the next reboot): `touch /tmp/conwatch.pause`
 - Turn it off: `/etc/init.d/conwatch stop; /etc/init.d/conwatch disable`
 - Watch without acting: `DRY_RUN=1` in `/etc/conwatch.conf`, then `/etc/init.d/conwatch restart`
+
+## Image Update
+
+System > Image Update in LuCI checks this repo for a newer release and flashes it when you press Update. It reads `latest.json` from the latest release, checks it's signed by the key in the image (`/etc/d50-update/keys/`), downloads the sysupgrade image, checks its size and sha256 and runs `sysupgrade -T` on it before it flashes. Settings are kept, the same as the stock Flash Firmware page.
+
+Packages you've installed yourself aren't in the new image and will be removed. The page lists them before you update, their settings are kept so you can reinstall them after.
+
+It only checks when you open the page, it never updates on its own. `logread -e d50-update` shows what it's done.
+
+To use it with your own builds, change `manifest_url` in `/etc/config/d50-update` and put your public key in `/etc/d50-update/keys/` (usign or signify, named by its fingerprint). `d50-update/mkmanifest.sh` makes and signs the `latest.json`.
+
+It's in the images from the release after `d50-ipq50xx-2026.11.11` on. Older images need flashing by hand once to get it.
 
 ## Things to know
 
