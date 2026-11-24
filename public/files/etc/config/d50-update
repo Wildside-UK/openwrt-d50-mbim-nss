@@ -1,0 +1,5 @@
+config d50-update 'main'
+	# Signed manifest describing the newest image (latest.json, signature at latest.json.sig)
+	option manifest_url 'https://github.com/Wildside-UK/openwrt-d50-mbim-nss/releases/latest/download/latest.json'
+	# 1 = keep settings (sysupgrade default), 0 = flash with sysupgrade -n
+	option keep_settings '1'

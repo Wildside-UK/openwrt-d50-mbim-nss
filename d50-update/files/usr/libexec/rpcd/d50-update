@@ -1,0 +1,169 @@
+#!/bin/sh
+# rpcd backend for System > Image Update: fetch a signed manifest, download the image it
+# names, check it and flash it. Nothing is flashed except from the "flash" call, which the
+# page only makes after the user presses Update.
+#
+# Manifest (latest.json, signed with usign/signify, signature at <url>.sig):
+#   build    name of the image, as in /etc/d50-build on the router running it
+#   seq      build time (unix seconds), used to tell newer from older
+#   image    image file name (relative to the manifest URL) or full URL
+#   sha256   of the image
+#   size     of the image in bytes
+#   base     optional, what it is built on
+#   notes    optional, one line
+#   packages optional, list of the image's package names (relative or full URL)
+
+. /usr/share/libubox/jshn.sh
+
+D=/tmp/d50-update
+KEYS=/etc/d50-update/keys
+STAMP=/etc/d50-build
+FW=/tmp/firmware.bin
+
+log() { logger -t d50-update "$*"; }
+cfg() { uci -q get d50-update.main."$1"; }
+stamp() { sed -n "s/^$1=//p" "$STAMP" 2>/dev/null | head -n1; }
+mf() { jsonfilter -i "$D/latest.json" -e "@.$1" 2>/dev/null; }
+state() { cat "$D/state" 2>/dev/null || echo idle; }
+setstate() { mkdir -p "$D"; printf '%s\n' "$2" > "$D/message"; echo "$1" > "$D/state"; }
+resolve() { case "$2" in http://*|https://*) echo "$2" ;; *) echo "${1%/*}/$2" ;; esac; }
+num() { case "$1" in ''|*[!0-9]*) echo 0 ;; *) echo "$1" ;; esac; }
+
+fail() {
+	json_init
+	json_add_boolean ok 0
+	json_add_string error "$1"
+	json_dump
+	exit 0
+}
+
+add_common() {
+	json_add_object current
+	json_add_string build "$(stamp BUILD)"
+	json_add_int seq "$(num "$(stamp SEQ)")"
+	json_close_object
+	json_add_boolean keep "$([ "$(cfg keep_settings)" = 0 ] && echo 0 || echo 1)"
+	json_add_string state "$(state)"
+	json_add_string message "$(cat "$D/message" 2>/dev/null)"
+}
+
+do_status() {
+	json_init
+	json_add_boolean ok 1
+	add_common
+	[ -f "$D/image.part" ] && json_add_int downloaded "$(wc -c < "$D/image.part")"
+	[ -f "$D/verified" ] && json_add_int size "$(num "$(mf size)")"
+	json_dump
+}
+
+do_check() {
+	case "$(state)" in downloading|flashing) fail "An update is already $(state)" ;; esac
+	url=$(cfg manifest_url)
+	[ -n "$url" ] || fail "No manifest_url in /etc/config/d50-update"
+	mkdir -p "$D"
+	rm -f "$D"/latest.json* "$D/verified" "$D/packages" "$D/image.part"
+	setstate idle ""
+	uclient-fetch -q -T 15 -O "$D/latest.json.new" "$url" 2>/dev/null \
+		|| fail "Could not download $url"
+	uclient-fetch -q -T 15 -O "$D/latest.json.new.sig" "$url.sig" 2>/dev/null \
+		|| fail "Could not download the signature $url.sig"
+	usign -V -q -P "$KEYS" -m "$D/latest.json.new" -x "$D/latest.json.new.sig" \
+		|| fail "The update information is not signed by a key this router trusts"
+	mv "$D/latest.json.new" "$D/latest.json"
+	mv "$D/latest.json.new.sig" "$D/latest.json.sig"
+
+	build=$(mf build); seq=$(mf seq); image=$(mf image); sha=$(mf sha256); size=$(mf size)
+	echo "$build" | grep -qE '^[A-Za-z0-9._+-]+$' || fail "Bad build name in the manifest"
+	echo "$sha" | grep -qE '^[0-9a-f]{64}$' || fail "Bad sha256 in the manifest"
+	[ "$(num "$seq")" -gt 0 ] && [ "$(num "$size")" -gt 0 ] && [ -n "$image" ] \
+		|| fail "The manifest is missing seq, size or image"
+	touch "$D/verified"
+
+	pk=$(mf packages)
+	if [ -n "$pk" ]; then
+		uclient-fetch -q -T 15 -O "$D/packages" "$(resolve "$url" "$pk")" 2>/dev/null || rm -f "$D/packages"
+	fi
+
+	cur=$(num "$(stamp SEQ)")
+	json_init
+	json_add_boolean ok 1
+	add_common
+	json_add_object latest
+	json_add_string build "$build"
+	json_add_int seq "$seq"
+	json_add_int size "$size"
+	json_add_string base "$(mf base)"
+	json_add_string notes "$(mf notes)"
+	json_close_object
+	json_add_boolean same "$([ "$build" = "$(stamp BUILD)" ] && echo 1 || echo 0)"
+	json_add_boolean newer "$([ "$build" != "$(stamp BUILD)" ] && [ "$seq" -gt "$cur" ] && echo 1 || echo 0)"
+	if [ -s "$D/packages" ]; then
+		json_add_array removed
+		for p in $(apk info 2>/dev/null | grep -vxF -f "$D/packages"); do json_add_string "" "$p"; done
+		json_close_array
+	fi
+	json_dump
+}
+
+do_download() {
+	[ -f "$D/verified" ] || fail "Check for updates first"
+	case "$(state)" in downloading|flashing) fail "An update is already $(state)" ;; esac
+	setstate downloading "Downloading"
+	log "downloading $(mf build)"
+	"$0" job </dev/null >/dev/null 2>&1 &
+	json_init
+	json_add_boolean ok 1
+	json_dump
+}
+
+# runs in the background, started by do_download
+job() {
+	url=$(resolve "$(cfg manifest_url)" "$(mf image)")
+	rm -f "$FW" "$D/image.part"
+	if ! uclient-fetch -q -T 30 -O "$D/image.part" "$url" 2>/dev/null; then
+		setstate error "Download failed: $url"; log "download failed: $url"; return
+	fi
+	if [ "$(wc -c < "$D/image.part")" != "$(mf size)" ]; then
+		setstate error "The download is the wrong size"; log "wrong size"; return
+	fi
+	if [ "$(sha256sum "$D/image.part" | cut -d' ' -f1)" != "$(mf sha256)" ]; then
+		setstate error "The download does not match its sha256"; log "sha256 mismatch"; return
+	fi
+	if ! sysupgrade -T "$D/image.part" >/dev/null 2>&1; then
+		setstate error "sysupgrade rejected the image (sysupgrade -T)"; log "sysupgrade -T failed"; return
+	fi
+	mv "$D/image.part" "$FW"
+	setstate ready "Verified, ready to flash"
+	log "$(mf build) downloaded and verified"
+}
+
+do_flash() {
+	[ "$(state)" = ready ] && [ -f "$FW" ] || fail "No verified image is ready"
+	[ "$(sha256sum "$FW" | cut -d' ' -f1)" = "$(mf sha256)" ] || fail "$FW changed after it was verified"
+	opt=
+	[ "$(cfg keep_settings)" = 0 ] && opt=-n
+	setstate flashing "Flashing"
+	log "flashing $(mf build) (sysupgrade $opt)"
+	( sleep 2; exec /sbin/sysupgrade $opt "$FW" ) </dev/null >/dev/null 2>&1 &
+	json_init
+	json_add_boolean ok 1
+	json_dump
+}
+
+case "$1" in
+	list)
+		echo '{ "status": {}, "check": {}, "download": {}, "flash": {} }'
+		;;
+	call)
+		case "$2" in
+			status) do_status ;;
+			check) do_check ;;
+			download) do_download ;;
+			flash) do_flash ;;
+			*) fail "Unknown method" ;;
+		esac
+		;;
+	job)
+		job
+		;;
+esac

@@ -1,0 +1,15 @@
+{
+	"luci-app-d50-update": {
+		"description": "Grant access to D50 image updates",
+		"read": {
+			"ubus": {
+				"d50-update": [ "status", "check" ]
+			}
+		},
+		"write": {
+			"ubus": {
+				"d50-update": [ "download", "flash" ]
+			}
+		}
+	}
+}

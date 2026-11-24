@@ -1,0 +1,13 @@
+{
+	"admin/system/d50-update": {
+		"title": "Image Update",
+		"order": 71,
+		"action": {
+			"type": "view",
+			"path": "system/d50-update"
+		},
+		"depends": {
+			"acl": [ "luci-app-d50-update" ]
+		}
+	}
+}
