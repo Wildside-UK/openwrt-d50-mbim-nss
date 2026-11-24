@@ -108,10 +108,6 @@ do_check() {
 do_download() {
 	[ -f "$D/verified" ] || fail "Check for updates first"
 	case "$(state)" in downloading|flashing) fail "An update is already $(state)" ;; esac
-	size=$(num "$(mf size)")
-	avail=$(awk '/^MemAvailable:/ { print $2 }' /proc/meminfo)
-	[ "$avail" -gt $((size / 1024 + 40960)) ] \
-		|| fail "Not enough free memory for the image ($((avail / 1024)) MB available, needs $((size / 1048576 + 40)) MB)"
 	setstate downloading "Downloading"
 	log "downloading $(mf build)"
 	"$0" job </dev/null >/dev/null 2>&1 &
