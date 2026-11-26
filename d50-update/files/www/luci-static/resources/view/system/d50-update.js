@@ -53,13 +53,13 @@ return view.extend({
 			if (r.removed && r.removed.length)
 				body.push(E('div', { 'class': 'alert-message warning' }, [
 					E('p', _('These installed packages are not in the new image and will be removed. Their settings are kept, reinstall them after the update:')),
-					E('p', E('code', r.removed.join(' ')))
+					E('p', {}, E('code', r.removed.join(' ')))
 				]));
 
 			if (r.same)
-				body.push(E('p', E('strong', _('This router is up to date.'))));
+				body.push(E('p', {}, E('strong', _('This router is up to date.'))));
 			else if (!r.newer)
-				body.push(E('p', E('strong', _('The running image is newer than the latest published one.'))));
+				body.push(E('p', {}, E('strong', _('The running image is newer than the latest published one.'))));
 		}
 
 		body.push(E('div', { 'class': 'cbi-page-actions' }, [
