@@ -4,7 +4,7 @@ Full NSS offload on the Xunison (Zearts) Exigo Hub D50 5G, with the Quectel RM50
 
 The image is kuncy7's IPQ5018 NSS release ([kuncy7/openwrt-nss-edma](https://github.com/kuncy7/openwrt-nss-edma), `ipq50xx-2026.11.24`) built from his published config and feed pins. Since 11.18 his tree includes the `umbim` fix from [openwrt/openwrt#25946](https://github.com/openwrt/openwrt/pull/25946) (without it an MBIM connection comes up with no DNS servers), so this repository no longer carries its own copy.
 
-On top of that the image has two extras for a cellular link: [unRAVEL](#unravel-upload-shaping) for upload shaping (installed, switched off) and [conwatch](#conwatch), a watchdog that brings the connection back when it dies. Without those two, the package list is identical to kuncy7's own D50 image.
+On top of that the image has [LuCI](#luci), [adblock-lean](#adblock-lean-ad-blocking) for ad blocking (on), and two extras for a cellular link: [unRAVEL](#unravel-upload-shaping) for upload shaping (installed, switched off) and [conwatch](#conwatch), a watchdog that brings the connection back when it dies. `image-packages.txt` lists everything in the image; `ci/public-extra-packages.txt` lists what's added to kuncy7's own D50 image.
 
 ## Downloads
 
@@ -12,7 +12,7 @@ Each release has:
 
 - `...-squashfs-sysupgrade.bin`: flash over a running OpenWrt.
 - `...-squashfs-factory.img`: for U-Boot web recovery.
-- `openwrt-imagebuilder-...Linux-x86_64.tar.zst` and `...Linux-aarch64.tar.zst`: Image Builders for adding your own packages and config. They don't include unRAVEL or conwatch.
+- `openwrt-imagebuilder-...Linux-x86_64.tar.zst` and `...Linux-aarch64.tar.zst`: Image Builders for adding your own packages and config. They don't include unRAVEL, conwatch, LuCI or adblock-lean.
 - `kuncy7-ipq50xx-2026.11.24.pem`: the key kuncy7 signed this release's kmod feed with. It's already in the images; if you build your own with an Image Builder, put it in `files/etc/apk/keys/` or `apk add kmod-...` won't trust the feed.
 - `image-packages.txt` and `sha256sums`.
 
@@ -50,6 +50,21 @@ It's on by default in this image. `logread -e conwatch` shows what it's done. Se
 - Pause it (until the next reboot): `touch /tmp/conwatch.pause`
 - Turn it off: `/etc/init.d/conwatch stop; /etc/init.d/conwatch disable`
 - Watch without acting: `DRY_RUN=1` in `/etc/conwatch.conf`, then `/etc/init.d/conwatch restart`
+
+## LuCI
+
+The web interface is included: browse to the router's address. System > Image Update and Services > Adblock-lean are in it.
+
+## adblock-lean (ad blocking)
+
+[adblock-lean](https://github.com/lynxthecat/adblock-lean) 0.8.1 by Lynx and Wizballs blocks ads, trackers and malware domains in dnsmasq. It sets itself up the first time the router gets a connection: [Hagezi](https://github.com/hagezi/dns-blocklists) Pro plus Threat Intelligence Feeds medium (about 440,000 domains, about 34 MB of RAM in dnsmasq), updated daily at 05:00. Until then nothing is blocked.
+
+The lists are adblock-lean's medium preset with TIF medium instead of TIF mini, and with its size limits raised for that (from `calculate_limits` for 500k entries). Don't use the full `hagezi:tif`: on a D50 it takes dnsmasq to about 100 MB and the daily update close to running out of memory.
+
+Services > Adblock-lean in LuCI ([luci-app-adblock-lean](https://github.com/Wildside-UK/luci-app-adblock-lean)) shows what's blocked, checks a domain, and edits the lists, your allowlist and your blocklist. Your adblock-lean settings and lists are kept over a sysupgrade.
+
+- Turn it off: `service adblock-lean stop; service adblock-lean disable`
+- Logs: `logread -e adblock-lean`
 
 ## Image Update
 

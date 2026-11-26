@@ -1,0 +1,37 @@
+#!/bin/sh
+# adblock-lean on this image. The first time an uplink comes up with no adblock-lean config,
+# run adblock-lean's own config generator (medium preset) and setup, with Hagezi Pro + TIF
+# medium and limits from adblock-lean's calculate_limits for 500k entries. After that, and on
+# every later uplink up: if there is no blocklist yet, start adblock-lean, retrying every 60 s
+# for up to 10 minutes (its boot start can run before DNS or the clock is ready).
+# Setup needs dnsmasq running, which is why this is not a uci-defaults script.
+[ "$ACTION" = ifup ] || exit 0
+[ -x /etc/init.d/adblock-lean ] || exit 0
+[ -n "$(ip -4 route show default 2>/dev/null)" ] || exit 0
+(
+	flock -n 9 || exit 0
+	S=/etc/init.d/adblock-lean C=/etc/adblock-lean/config
+	if [ -f /etc/adblock-lean/.first-setup ] && [ ! -s "$C" ]; then
+		luci_preset=medium luci_upd_cron_job=1 luci_cron_schedule="0 5 * * *" $S gen_config >/dev/null 2>&1
+		if [ -s "$C" ]; then
+			sed -i 's|^raw_block_lists=.*|raw_block_lists="hagezi:pro hagezi:tif.medium"|
+				s|^max_file_part_size_KB=.*|max_file_part_size_KB="10000"|
+				s|^max_blocklist_file_size_KB=.*|max_blocklist_file_size_KB="12000"|
+				s|^min_good_line_count=.*|min_good_line_count="140000"|' "$C"
+			luci_use_old_config=1 $S setup >/dev/null 2>&1
+			rm -f /etc/adblock-lean/.first-setup
+			logger -t adblock-lean-setup "configured: hagezi:pro hagezi:tif.medium, daily update 05:00"
+		else
+			logger -t adblock-lean-setup "gen_config failed, will try again on the next uplink up"
+			exit 0
+		fi
+	fi
+	$S enabled 2>/dev/null || exit 0
+	for i in 1 2 3 4 5 6 7 8 9 10; do
+		sleep 60
+		ls /var/run/adblock-lean/abl-blocklist* >/dev/null 2>&1 && exit 0
+		[ -f /tmp/adblock-lean/adblock-lean.pid ] && continue
+		logger -t adblock-lean-setup "no blocklist with the uplink up, starting adblock-lean (try $i)"
+		$S start >/dev/null 2>&1
+	done
+) 9>/var/lock/adblock-lean-setup.lock </dev/null >/dev/null 2>&1 &

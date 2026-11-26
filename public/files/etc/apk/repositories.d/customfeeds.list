@@ -1,0 +1,4 @@
+# add your custom package feeds here
+#
+# http://www.example.com/path/to/files/packages.adb
+https://raw.githubusercontent.com/Wildside-UK/luci-app-adblock-lean/refs/heads/main/apk/packages.adb
