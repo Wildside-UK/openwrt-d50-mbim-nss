@@ -108,6 +108,19 @@ jobs:
           (cd out && sha256sum *.bin *.img *.tar.zst *.pem > sha256sums)
           ls -la out
 
+      # release-notes.md: the generated notes plus CHANGES.md's Unreleased bullets,
+      # for the release and the bump PR. Not fatal: no notes, same build.
+      - name: Release notes
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if repo/ci/release-notes.sh "$RUNNER_TEMP/verify/image/rootfs/lib/apk/db/installed" > out/release-notes.md; then
+            cat out/release-notes.md >> "$GITHUB_STEP_SUMMARY"
+          else
+            rm -f out/release-notes.md
+            echo "::warning::ci/release-notes.sh failed, no release-notes.md"
+          fi
+
       # latest.json for System > Image Update: points at this build's files in the
       # release named after it (d50-<kuncy7 tag>), signed with the D50_UPDATE_KEY secret
       # (public key in public/files/etc/d50-update/keys). No secret = no latest.json.
