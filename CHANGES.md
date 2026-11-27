@@ -4,6 +4,11 @@ What changed in each published build. With each change, add a bullet under Unrel
 
 ## Unreleased
 
+## d50-ipq50xx-2026.11.24
+
+kuncy7's `ipq50xx-2026.11.24` for the Xunison Exigo Hub D50 5G, built from his published config and feed pins.
+
+- Base moves to kuncy7's 11.24 release (kernel 6.18.64). His release notes: [11.24](https://github.com/kuncy7/openwrt-nss-edma/releases/tag/ipq50xx-2026.11.24).
 - New: LuCI, the web interface. Browse to the router's address.
 - New: adblock-lean 0.8.1 ad blocking, on. It sets itself up the first time the router gets a connection: Hagezi Pro plus Threat Intelligence Feeds medium, updated daily at 05:00. Services > Adblock-lean in LuCI (luci-app-adblock-lean) shows what's blocked and edits the lists. Your adblock-lean settings are kept over a sysupgrade. See the README.
 - Fixed: System > Image Update showed empty lines where the "up to date" and package lines should be.
