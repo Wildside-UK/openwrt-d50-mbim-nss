@@ -4,6 +4,8 @@ What changed in each published build. With each change, add a bullet under Unrel
 
 ## Unreleased
 
+- Fixed: System > Image Update couldn't reach GitHub and timed out. `uclient-fetch` stalls on github.com's Content-Security-Policy header, which is over 4 KB, so it's patched in this image. A router on 11.23 or 11.24 has to be flashed by hand once to get it, Image Update works from then on.
+
 ## d50-ipq50xx-2026.11.24
 
 kuncy7's `ipq50xx-2026.11.24` for the Xunison Exigo Hub D50 5G, built from his published config and feed pins.

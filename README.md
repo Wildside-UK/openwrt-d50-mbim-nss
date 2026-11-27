@@ -74,6 +74,8 @@ Packages you've installed yourself aren't in the new image and will be removed. 
 
 It only checks when you open the page, it never updates on its own. `logread -e d50-update` shows what it's done.
 
+On d50-ipq50xx-2026.11.23 and d50-ipq50xx-2026.11.24 it can't reach GitHub ("Could not download ... latest.json"): their `uclient-fetch` times out on github.com's long headers. Flash a later release by hand once, Image Update works from then on.
+
 To use it with your own builds, change `manifest_url` in `/etc/config/d50-update` and put your public key in `/etc/d50-update/keys/` (usign or signify, named by its fingerprint). `d50-update/mkmanifest.sh` makes and signs the `latest.json`.
 
 It's in the images from `d50-ipq50xx-2026.11.23` on. Older images need flashing by hand once to get it.
