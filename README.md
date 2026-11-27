@@ -2,7 +2,7 @@
 
 Full NSS offload on the Xunison (Zearts) Exigo Hub D50 5G, with the Quectel RM500Q-AE on the upstream PCIe/MBIM stack (`mhi_wwan_mbim` + `umbim`, netdev `wwan0`).
 
-The image is kuncy7's IPQ5018 NSS release ([kuncy7/openwrt-nss-edma](https://github.com/kuncy7/openwrt-nss-edma), `ipq50xx-2026.11.24`) built from his published config and feed pins. Since 11.18 his tree includes the `umbim` fix from [openwrt/openwrt#25946](https://github.com/openwrt/openwrt/pull/25946) (without it an MBIM connection comes up with no DNS servers), so this repository no longer carries its own copy.
+The image is kuncy7's IPQ5018 NSS release ([kuncy7/openwrt-nss-edma](https://github.com/kuncy7/openwrt-nss-edma), `ipq50xx-2026.11.27`) built from his published config and feed pins. Since 11.18 his tree includes the `umbim` fix from [openwrt/openwrt#25946](https://github.com/openwrt/openwrt/pull/25946) (without it an MBIM connection comes up with no DNS servers), so this repository no longer carries its own copy.
 
 On top of that the image has [LuCI](#luci), [adblock-lean](#adblock-lean-ad-blocking) for ad blocking (on), and two extras for a cellular link: [unRAVEL](#unravel-upload-shaping) for upload shaping (installed, switched off) and [conwatch](#conwatch), a watchdog that brings the connection back when it dies. `image-packages.txt` lists everything in the image; `ci/public-extra-packages.txt` lists what's added to kuncy7's own D50 image.
 
@@ -13,7 +13,7 @@ Each release has:
 - `...-squashfs-sysupgrade.bin`: flash over a running OpenWrt.
 - `...-squashfs-factory.img`: for U-Boot web recovery.
 - `openwrt-imagebuilder-...Linux-x86_64.tar.zst` and `...Linux-aarch64.tar.zst`: Image Builders for adding your own packages and config. They don't include unRAVEL, conwatch, LuCI or adblock-lean.
-- `kuncy7-ipq50xx-2026.11.24.pem`: the key kuncy7 signed this release's kmod feed with. It's already in the images; if you build your own with an Image Builder, put it in `files/etc/apk/keys/` or `apk add kmod-...` won't trust the feed.
+- `kuncy7-ipq50xx-2026.11.27.pem`: the key kuncy7 signed this release's kmod feed with. It's already in the images; if you build your own with an Image Builder, put it in `files/etc/apk/keys/` or `apk add kmod-...` won't trust the feed.
 - `image-packages.txt` and `sha256sums`.
 
 Kernel modules for this build come from kuncy7's repository for the same release, which the image already lists.
