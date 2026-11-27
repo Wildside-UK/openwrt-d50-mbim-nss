@@ -8,7 +8,7 @@
   - `patches/openwrt/0001`: the NSS packages (and kuncy7's sqm/iperf3 set) in the D50's `DEVICE_PACKAGES`, so the Image Builder's default image matches the build's own. It also comments out five boards (cmcc_rax3000q, glinet_gl-x2000, linksys_mr2000, tplink_re700x, wallys_dr5018s) whose device trees reference labels the tree no longer defines, which an Image Builder build would otherwise trip over. Still the case in 11.11.
   - `patches/openwrt/0002`: `base-files` takes `distfeeds.list` from `files/`, so images made with the Image Builder also point `apk` at kuncy7's feed, whose kernel modules match this kernel.
 
-- **Published image:** `ci/public.sh` runs the Image Builder from the same build once more with two extras: the unRAVEL-cellular package (fetched from its GitHub release, sha256 checked) installed but not enabled, with the config in `public/files/etc/config/unravel`, and conwatch (`public/files`), enabled. Only that image is published. The plain image is built and checked but not shipped, and both Image Builders stay as built (without unRAVEL or conwatch).
+- **Published image:** `ci/public.sh` runs the Image Builder from the same build once more with the extras in the README: the unRAVEL-cellular package (fetched from its GitHub release, sha256 checked) installed but not enabled, with the config in `public/files/etc/config/unravel`; conwatch, enabled; modem-pcie-late (`modem-pcie-late/`, with `sms-tool` and the USB serial driver); System > Image Update (`d50-update/`); LuCI; and adblock-lean (its pinned upstream files, sha256 checked) with luci-app-adblock-lean from its signed apk repository. `ci/public-extra-packages.txt` lists the packages it adds. Only that image is published. The plain image is built and checked but not shipped, and both Image Builders stay as built (without any of these).
 
 To build locally: `ci/build.sh <work-dir>` on a normal OpenWrt build host.
 
@@ -23,7 +23,13 @@ To build locally: `ci/build.sh <work-dir>` on a normal OpenWrt build host.
 - the package feeds point at kuncy7's repository,
 - and the Image Builder reproduces the image (same packages, same files, same kernel).
 
-`ci/public.sh` then fails the build unless the published image has the plain image's packages plus `unravel-cellular`, the same kernel, unRAVEL installed but not enabled with our config, conwatch present and live, the peer DNS fix and kuncy7's feed.
+`ci/public.sh` then fails the build unless the published image has the plain image's packages plus `ci/public-extra-packages.txt`, the same kernel, unRAVEL installed but not enabled with our config, conwatch present and live, modem-pcie-late, the Image Update page with its signing key, LuCI, adblock-lean with its first-setup marker and luci-app-adblock-lean, the peer DNS fix and kuncy7's feed.
+
+## Releasing
+
+Each build's files include `release-notes.md` from `ci/release-notes.sh`: the title on the first line, then the notes. The header, the base line with links to kuncy7's releases since the last published build, the umbim line, the old package repository line and the flashing line are generated; the rest is the Unreleased bullets in `CHANGES.md`, so add one there with each change. The same notes go in the bump PR. Releases are named `d50-<kuncy7 tag>`, and `latest.json` in the build's files already points at that name.
+
+When a release is published, rename Unreleased in `CHANGES.md` to its tag, put the generated lines from its notes under it, and start a new empty Unreleased.
 
 ## Checking a flashed router
 

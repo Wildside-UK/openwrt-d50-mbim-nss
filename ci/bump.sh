@@ -85,7 +85,8 @@ done
 git -C "$T/tree" checkout -q -f "$REV"; git -C "$T/tree" clean -fdq
 
 echo "== text (pin swaps only)"
-sed -i "s|$OLD|$TAG|g" "$REPO/README.md" "$REPO/BUILD.md"
+# lines naming one of our own releases (d50-ipq50xx-...) keep it: they say which release something arrived in
+sed -i "/d50-$OLD/!s|$OLD|$TAG|g" "$REPO/README.md" "$REPO/BUILD.md"
 OLDREV=$(grep -oE 'kuncy7/openwrt-nss-edma at `[0-9a-f]{10}`' "$REPO/BUILD.md" | grep -oE '[0-9a-f]{10}' || true)
 [ -z "$OLDREV" ] || sed -i "s|at \`$OLDREV\`|at \`${REV:0:10}\`|" "$REPO/BUILD.md"
 O=${OLD#ipq50xx-????.}; N=${TAG#ipq50xx-????.}

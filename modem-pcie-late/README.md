@@ -4,7 +4,7 @@ A boot script that brings the D50's modem back onto PCIe when it misses the link
 
 ## The problem
 
-After a U-Boot web-recovery install the first boot often doesn't see the modem (`80000000.pcie: Device not found`, no `0001:01:00.0`). It misses aound 70% of the time on web-recovery installs. A reboot fixes it, and normal reboots and cold power-ons are fine.
+After a U-Boot web-recovery install the first boot often doesn't see the modem (`80000000.pcie: Device not found`, no `0001:01:00.0`). It misses around 70% of the time on web-recovery installs. A reboot fixes it, and normal reboots and cold power-ons are fine.
 
 The kernel only waits about 1 s for the modem link at probe and doesn't look again. On a miss the modem is up on USB but the PCIe link never trains by itself, a late rescan on its own doesn't help. Restarting the modem over its USB AT port (`AT+CFUN=1,1`, Quectel's soft reset, no power cut) brings the link up within 2 s and a rescan then finds it. More detail in the [forum thread](https://forum.openwrt.org/t/adding-support-for-xunison-exigo-d50-5g-zearts-d50-5g-ipq5018/247016/584).
 
