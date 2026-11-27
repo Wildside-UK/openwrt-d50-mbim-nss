@@ -1,0 +1,92 @@
+diff --git a/package/libs/uclient/Makefile b/package/libs/uclient/Makefile
+index 4012f07..da1dcd2 100644
+--- a/package/libs/uclient/Makefile
++++ b/package/libs/uclient/Makefile
+@@ -1,7 +1,7 @@
+ include $(TOPDIR)/rules.mk
+ 
+ PKG_NAME:=uclient
+-PKG_RELEASE=1
++PKG_RELEASE=2
+ 
+ PKG_SOURCE_PROTO:=git
+ PKG_SOURCE_URL=$(PROJECT_GIT)/project/uclient.git
+diff --git a/package/libs/uclient/patches/100-uclient-http-read-header-lines-longer-than-4-KB.patch b/package/libs/uclient/patches/100-uclient-http-read-header-lines-longer-than-4-KB.patch
+new file mode 100644
+index 0000000..3fc056c
+--- /dev/null
++++ b/package/libs/uclient/patches/100-uclient-http-read-header-lines-longer-than-4-KB.patch
+@@ -0,0 +1,73 @@
++From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
++From: Steve Meek <stevemeek82@gmail.com>
++Date: Fri, 27 Nov 2026 09:34:59 +0000
++Subject: [PATCH] uclient-http: read header lines longer than 4 KB
++
++Header lines are parsed from the first read buffer only, and the stream
++uses libubox's default 4096-byte read buffer. A longer line never shows
++its newline, the buffer stays full and the request stalls until the
++timeout. github.com sends a Content-Security-Policy header of over
++4 KB, so uclient-fetch times out on every github.com URL, release
++downloads included.
++
++Use a 32 KB read buffer, and fail the request instead of stalling when a
++header line still does not fit.
++
++Signed-off-by: Steve Meek <stevemeek82@gmail.com>
++---
++ uclient-http.c | 17 ++++++++++++++++-
++ 1 file changed, 16 insertions(+), 1 deletion(-)
++
++diff --git a/uclient-http.c b/uclient-http.c
++index 04ddcb9..7270c27 100644
++--- a/uclient-http.c
+++++ b/uclient-http.c
++@@ -34,6 +34,13 @@
++ #include "uclient-utils.h"
++ #include "uclient-backend.h"
++ 
+++/*
+++ * Header lines are parsed from the first read buffer only, so a line has to
+++ * fit in one buffer. libubox defaults to 4096 bytes, which some servers
+++ * exceed (github.com sends a Content-Security-Policy line of over 4 KB).
+++ */
+++#define UCLIENT_HTTP_READ_BUF_LEN	32768
+++
++ enum auth_type {
++ 	AUTH_TYPE_UNKNOWN,
++ 	AUTH_TYPE_NONE,
++@@ -841,8 +848,14 @@ static void __uclient_notify_read(struct uclient_http *uh)
++ 
++ 		do {
++ 			sep = strchr(data, '\n');
++-			if (!sep)
+++			if (!sep) {
+++				/* a header line that cannot fit would stall until the timeout */
+++				if (ustream_read_buf_full(uh->us)) {
+++					uclient_http_error(uh, UCLIENT_ERROR_CONNECT);
+++					return;
+++				}
++ 				break;
+++			}
++ 
++ 			next = sep + 1;
++ 			if (sep > data && sep[-1] == '\r')
++@@ -933,6 +946,7 @@ static int uclient_setup_http(struct uclient_http *uh)
++ 	uh->ssl = false;
++ 
++ 	us->string_data = true;
+++	us->r.buffer_len = UCLIENT_HTTP_READ_BUF_LEN;
++ 	us->notify_state = uclient_notify_state;
++ 	us->notify_read = uclient_notify_read;
++ 	us->notify_write = uclient_notify_write;
++@@ -1019,6 +1033,7 @@ static int uclient_setup_https(struct uclient_http *uh)
++ 		return UCLIENT_ERROR_CONNECT;
++ 
++ 	us->string_data = true;
+++	us->r.buffer_len = UCLIENT_HTTP_READ_BUF_LEN;
++ 	us->notify_state = uclient_ssl_notify_state;
++ 	us->notify_read = uclient_ssl_notify_read;
++ 	us->notify_write = uclient_ssl_notify_write;
++-- 
++2.47.3
++
